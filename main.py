@@ -38,9 +38,9 @@ def generate_md5(url):
 def init_speech_checker():
     cls = CLSExecutor()
     device = paddle.get_device()
-    print(f'init_speech_checker use device:{device}')
     paddle.set_device(device)
     cls._init_from_path('panns_cnn14')
+    print(f'init_speech_checker completely, use device:{device}')
     return cls
 
 
@@ -154,20 +154,27 @@ def load_audio_samples(audio_file_path):
     return 0, samples
 
 
-def find_speech_list(speech_checker, samples, args, speech_score_threshold):
+def find_speech_list(speech_checker, samples, args, speech_score_threshold, speech_segment_duration):
     sample_rate = 32000
     total_samples_len = len(samples)
     duration = len(samples) / sample_rate
-    if duration < 100:
+    if duration < 10:
         print(f'Error: The audio duration is too short! durationS:{duration}')
         return ERROR_CODE_MEDIA_FILE_TOO_SHORT, None
 
-    start_offset_sample = args.parse_start_offset * sample_rate
-    speech_list = []
-    samples_per_step = int(total_samples_len - start_offset_sample / args.speech_segment_count)
+    start_offset_duration = args.parse_start_offset
+    if duration - start_offset_duration < 300:
+        start_offset_duration = 0
 
-    detect_duration = min(max(3, args.speech_segment_duration), 20)
+    start_offset_sample = start_offset_duration * sample_rate
+    speech_list = []
+    samples_per_zone = int((total_samples_len - start_offset_sample) / args.speech_segment_count)
+
+    detect_duration = min(max(3, speech_segment_duration), 20)
     samples_per_window = int(detect_duration * sample_rate)
+
+    step_duration = 2
+    samples_per_step = int(step_duration * sample_rate)
 
     empty_duration = 1
     samples_per_empty = int(empty_duration * sample_rate)
@@ -227,14 +234,16 @@ def find_speech_list(speech_checker, samples, args, speech_score_threshold):
             speech_object.score = speech_score
             speech_list.append(speech_object)
             curr_speech_count += 1
-            stop = max(stop, start_offset_sample + samples_per_step * curr_speech_count)
+            stop = max(stop, start_offset_sample + samples_per_zone * curr_speech_count)
+        else:
+            stop = start + samples_per_step
 
     return len(speech_list), speech_list
 
 
 if __name__ == '__main__':
     # audio_file = "/Users/bevis/PycharmProjects/LID/dataset/test_100/mp3/a03f2c4780798a5398c86b196e479275.mp3"
-    audio_file = "http://30.211.97.64/video/pre-1.mp4"
+    audio_file = "http://vfx.mtime.cn/Video/2019/06/27/mp4/190627231412433967.mp4"
 
     parser = argparse.ArgumentParser(add_help=True)
     parser.add_argument(
@@ -278,12 +287,14 @@ if __name__ == '__main__':
     if ret < 0:
         print(f'load audio file failed, ret:{ret}')
         exit(1)
-    ret, speech_list = find_speech_list(speech_checker, samples, args, args.speech_score_threshold)
+    ret, speech_list = find_speech_list(speech_checker, samples, args, args.speech_score_threshold,
+                                        args.speech_segment_duration)
     print(f'find speech result code:{ret}')
 
     if 0 <= ret < args.speech_segment_count:
         # try again
-        ret, speech_list = find_speech_list(speech_checker, samples, args, max(args.speech_score_threshold - 0.2, 0.4))
+        ret, speech_list = find_speech_list(speech_checker, samples, args, max(args.speech_score_threshold - 0.2, 0.4),
+                                            max(args.speech_segment_duration - 2, 3))
         print(f'try to find speech result code:{ret}')
 
     if args.debug:
