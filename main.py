@@ -5,13 +5,13 @@ from paddlespeech.cli.cls.infer import CLSExecutor
 from paddlespeech.cli.st.infer import STExecutor
 from paddleaudio.backends import soundfile_load as load
 from paddle.audio.features import LogMelSpectrogram
+from scipy import signal
 
 import os
 import paddle
 import numpy as np
 import argparse
 import scipy.io.wavfile as wav
-import librosa
 import hashlib
 
 ERROR_CODE_NOT_SUPPORT = -1
@@ -230,7 +230,8 @@ def find_speech_list(speech_checker, samples, args, speech_score_threshold, spee
             speech_object.label = speech_label
             speech_object.start = start
             speech_object.stop = stop
-            speech_object.samples = librosa.resample(new_samples, sample_rate, 16000)
+            speech_object.samples = signal.resample(new_samples, int(len(new_samples) * float(16000) / sample_rate))
+            # speech_object.samples = librosa.resample(new_samples, sample_rate, 16000)
             speech_object.score = speech_score
             speech_list.append(speech_object)
             curr_speech_count += 1
