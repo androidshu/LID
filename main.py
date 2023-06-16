@@ -162,19 +162,19 @@ def find_speech_list(speech_checker, samples, args, speech_score_threshold):
         print(f'Error: The audio duration is too short! durationS:{duration}')
         return ERROR_CODE_MEDIA_FILE_TOO_SHORT, None
 
+    start_offset_sample = args.parse_start_offset * sample_rate
     speech_list = []
+    samples_per_step = int(total_samples_len - start_offset_sample / args.speech_segment_count)
+
     detect_duration = min(max(3, args.speech_segment_duration), 20)
     samples_per_window = int(detect_duration * sample_rate)
-
-    step_duration = 3
-    samples_per_step = int(step_duration * sample_rate)
 
     empty_duration = 1
     samples_per_empty = int(empty_duration * sample_rate)
 
     curr_speech_count = 0
 
-    stop = args.parse_start_offset
+    stop = start_offset_sample
     empty_length = 0
     empty_wav_count = 0
 
@@ -227,7 +227,7 @@ def find_speech_list(speech_checker, samples, args, speech_score_threshold):
             speech_object.score = speech_score
             speech_list.append(speech_object)
             curr_speech_count += 1
-            stop = max(stop, int(total_samples_len / args.speech_segment_count) * curr_speech_count)
+            stop = max(stop, start_offset_sample + samples_per_step * curr_speech_count)
 
     return len(speech_list), speech_list
 
@@ -283,7 +283,7 @@ if __name__ == '__main__':
 
     if 0 <= ret < args.speech_segment_count:
         # try again
-        ret, speech_list = find_speech_list(speech_checker, args.audio_file, args, max(args.speech_score_threshold - 0.2, 0.5))
+        ret, speech_list = find_speech_list(speech_checker, samples, args, max(args.speech_score_threshold - 0.2, 0.4))
         print(f'try to find speech result code:{ret}')
 
     if args.debug:
