@@ -104,7 +104,7 @@ def is_empty_wav(wav_file, threshold=90, print_log=False):
     return is_empty
 
 
-def find_speech_list(speech_checker, audio_file_path, args, speech_score_threshold):
+def load_audio_samples(audio_file_path):
     sample_rate = 32000
     is_temp_file = False
 
@@ -151,7 +151,11 @@ def find_speech_list(speech_checker, audio_file_path, args, speech_score_thresho
         if args.debug:
             print(f'deleting temp wav file:{audio_file_path}')
         os.remove(audio_file_path)
+    return 0, samples
 
+
+def find_speech_list(speech_checker, samples, args, speech_score_threshold):
+    sample_rate = 32000
     total_samples_len = len(samples)
     duration = len(samples) / sample_rate
     if duration < 100:
@@ -229,10 +233,13 @@ def find_speech_list(speech_checker, audio_file_path, args, speech_score_thresho
 
 
 if __name__ == '__main__':
+    # audio_file = "/Users/bevis/PycharmProjects/LID/dataset/test_100/mp3/a03f2c4780798a5398c86b196e479275.mp3"
+    audio_file = "http://30.211.97.64/video/pre-1.mp4"
+
     parser = argparse.ArgumentParser(add_help=True)
     parser.add_argument(
-        '--input', type=str, default=None,
-        help='Audio file to classify.')
+        '--audio-file', type=str, default=audio_file,
+        help='Audio file to detect language, support local file and online url')
     parser.add_argument(
         '--debug', type=bool, default=True,
         help='Debug mode.')
@@ -267,25 +274,43 @@ if __name__ == '__main__':
     # print(result)
 
     speech_checker = init_speech_checker()
-    # audio_file = "/Users/bevis/PycharmProjects/speech/dataset/test_100/mp3/a03f2c4780798a5398c86b196e479275.mp3"
-    audio_file = "http://30.211.97.9/video/pre-1.mp4"
-
-    ret, speech_list = find_speech_list(speech_checker, audio_file, args, args.speech_score_threshold)
+    ret, samples = load_audio_samples(args.audio_file)
+    if ret < 0:
+        print(f'load audio file failed, ret:{ret}')
+        exit(1)
+    ret, speech_list = find_speech_list(speech_checker, samples, args, args.speech_score_threshold)
     print(f'find speech result code:{ret}')
+
     if 0 <= ret < args.speech_segment_count:
         # try again
-        ret, speech_list = find_speech_list(speech_checker, audio_file, args, max(args.speech_score_threshold - 0.2, 0.5))
+        ret, speech_list = find_speech_list(speech_checker, args.audio_file, args, max(args.speech_score_threshold - 0.2, 0.5))
         print(f'try to find speech result code:{ret}')
 
     if args.debug:
         if ret > 0:
-            dir_path = os.path.dirname(audio_file)
+            dir_path = args.temp_dir
+            print(f'save audio seg and manifest file to dir:{dir_path}')
+            if not os.path.exists(dir_path):
+                os.makedirs(dir_path)
             index = 0
+            file_path_list = []
             for speech_obj in speech_list:
                 print(f'speech_obj:{speech_obj}')
                 index += 1
                 file_path = os.path.join(dir_path, f'index_{index}.wav')
                 wav.write(file_path, 16000, speech_obj.samples)
+                file_path_list.append(os.path.abspath(file_path))
+
+            manifest_tsv_file = os.path.join(dir_path, 'manifest.tsv')
+            manifest_lang_file = os.path.join(dir_path, 'manifest.lang')
+            with open(manifest_tsv_file, mode='w+', encoding='utf-8') as f:
+                f.write("/\n")
+                for file_path in file_path_list:
+                    f.write(f'{file_path}\t16000\n')
+            with open(manifest_lang_file, mode='w+', encoding='utf-8') as f:
+                for file_path in file_path_list:
+                    f.write('eng\t1\n')
+
 
 
 
