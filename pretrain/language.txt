@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MMS</title>
+<style>
+p { margin:3px }
+</style>
+</head>
+<body>
+<p> Iso Code &emsp; Language Name   </p>
+<p> ara &emsp; Arabic </p>
+<p> eng &emsp; English </p>
+<p> cmn &emsp; Chinese, Mandarin </p>
+<p> spa &emsp; Spanish </p>
+<p> fra &emsp; French </p>
+<p> mlg &emsp; Malagasy </p>
+<p> ful &emsp; Fulah </p>
+<p> swe &emsp; Swedish </p>
+<p> por &emsp; Portuguese </p>
+<p> zlm &emsp; Malay </p>
+<p> sun &emsp; Sunda </p>
+<p> tuk &emsp; Turkmen </p>
+<p> vie &emsp; Vietnamese </p>
+<p> kor &emsp; Korean </p>
+<p> hin &emsp; Hindi </p>
+<p> ben &emsp; Bengali </p>
+<p> som &emsp; Somali </p>
+<p> asm &emsp; Assamese </p>
+<p> swh &emsp; Swahili </p>
+<p> urd &emsp; Urdu </p>
+<p> hau &emsp; Hausa </p>
+<p> ind &emsp; Indonesian </p>
+<p> tat &emsp; Tatar </p>
+<p> bod &emsp; Tibetan, Central </p>
+<p> tel &emsp; Telugu </p>
+<p> mon &emsp; Mongolian </p>
+<p> aze &emsp; Azerbaijani </p>
+<p> rus &emsp; Russian </p>
+<p> tgl &emsp; Tagalog </p>
+<p> tur &emsp; Turkish </p>
+<p> mar &emsp; Marathi </p>
+<p> amh &emsp; Amharic </p>
+<p> ron &emsp; Romanian </p>
+<p> yor &emsp; Yoruba </p>
+<p> tha &emsp; Thai </p>
+<p> slv &emsp; Slovene </p>
+<p> heb &emsp; Hebrew </p>
+<p> mkd &emsp; Macedonian </p>
+<p> bel &emsp; Belarusian </p>
+<p> nya &emsp; Chichewa </p>
+<p> mal &emsp; Malayalam </p>
+<p> bul &emsp; Bulgarian </p>
+<p> hun &emsp; Hungarian </p>
+<p> hat &emsp; Haitian Creole </p>
+<p> fas &emsp; Persian </p>
+<p> hrv &emsp; Croatian </p>
+<p> cat &emsp; Catalan </p>
+<p> tam &emsp; Tamil </p>
+<p> orm &emsp; Oromo </p>
+<p> nld &emsp; Dutch </p>
+<p> afr &emsp; Afrikaans </p>
+<p> pol &emsp; Polish </p>
+<p> jav &emsp; Javanese </p>
+<p> lin &emsp; Lingala </p>
+<p> cym &emsp; Welsh </p>
+<p> nob &emsp; Norwegian Bokmål </p>
+<p> grn &emsp; Guarani </p>
+<p> snd &emsp; Sindhi </p>
+<p> kaz &emsp; Kazakh </p>
+<p> isl &emsp; Icelandic </p>
+<p> uzb &emsp; Uzbek </p>
+<p> bos &emsp; Bosnian </p>
+<p> mya &emsp; Burmese </p>
+<p> lat &emsp; Latin </p>
+<p> deu &emsp; German, Standard </p>
+<p> npi &emsp; Nepali </p>
+<p> yue &emsp; Chinese, Yue </p>
+<p> kat &emsp; Georgian </p>
+<p> kan &emsp; Kannada </p>
+<p> lit &emsp; Lithuanian </p>
+<p> sqi &emsp; Albanian </p>
+<p> hye &emsp; Armenian </p>
+<p> jpn &emsp; Japanese </p>
+<p> ell &emsp; Greek </p>
+<p> lav &emsp; Latvian </p>
+<p> khm &emsp; Khmer </p>
+<p> bak &emsp; Bashkort </p>
+<p> pan &emsp; Punjabi, Eastern </p>
+<p> ces &emsp; Czech </p>
+<p> tgk &emsp; Tajik </p>
+<p> fao &emsp; Faroese </p>
+<p> guj &emsp; Gujarati </p>
+<p> ukr &emsp; Ukrainian </p>
+<p> glg &emsp; Galician </p>
+<p> ltz &emsp; Luxembourgish </p>
+<p> sna &emsp; Shona </p>
+<p> lao &emsp; Lao </p>
+<p> mlt &emsp; Maltese </p>
+<p> sin &emsp; Sinhala </p>
+<p> lug &emsp; Ganda </p>
+<p> mri &emsp; Maori </p>
+<p> eus &emsp; Basque </p>
+<p> pus &emsp; Pushto </p>
+<p> srp &emsp; Serbian </p>
+<p> ita &emsp; Italian </p>
+<p> nno &emsp; Norwegian Nynorsk </p>
+<p> luo &emsp; Dholuo </p>
+<p> ory &emsp; Odia </p>
+<p> slk &emsp; Slovak </p>
+<p> fin &emsp; Finnish </p>
+<p> bre &emsp; Breton </p>
+<p> yid &emsp; Yiddish </p>
+<p> dan &emsp; Danish </p>
+<p> est &emsp; Estonian </p>
+<p> ceb &emsp; Cebuano </p>
+<p> war &emsp; Waray-Waray </p>
+<p> kir &emsp; Kyrgyz </p>
+<p> oci &emsp; Occitan </p>
+<p> san &emsp; Sanskrit </p>
+<p> kam &emsp; Kamba </p>
+<p> wol &emsp; Wolof </p>
+<p> umb &emsp; Umbundu </p>
+<p> ibo &emsp; Igbo </p>
+<p> haw &emsp; Hawaiian </p>
+<p> zul &emsp; Zulu </p>
+<p> xho &emsp; Xhosa </p>
+<p> nso &emsp; Sotho, Northern </p>
+<p> ckb &emsp; Kurdish, Central </p>
+<p> epo &emsp; Esperanto </p>
+<p> abk &emsp; Abkhaz </p>
+<p> gle &emsp; Irish </p>
+<p> kea &emsp; Kabuverdianu </p>
+<p> ast &emsp; Asturian </p>
+<p> glv &emsp; Manx </p>
+<p> sco &emsp; Scots </p>
+<p> ina &emsp; Interlingua (International Auxiliary Language Association) </p>
+</body>
+</html>
