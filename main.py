@@ -117,7 +117,7 @@ def load_audio_samples(audio_file_path):
 
         if not os.path.exists(temp_dir):
             os.makedirs(temp_dir)
-        os.system(f'ffmpeg -i {audio_file_path} -ar {sample_rate} -ac 1 {temp_file_path}')
+        os.system(f'ffmpeg -i "{audio_file_path}" -ar {sample_rate} -ac 1 {temp_file_path}')
         if not os.path.exists(temp_file_path):
             return ERROR_CODE_FILE_DOWNLOAD_FAILED, None
         is_temp_file = True
