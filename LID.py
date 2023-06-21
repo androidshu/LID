@@ -1,200 +1,175 @@
-import torch
-from fairseq.data.text_compressor import TextCompressionLevel, TextCompressor
-from fairseq import checkpoint_utils, distributed_utils, options, utils
-from fairseq import checkpoint_utils, data, options, tasks
-from fairseq.data import FileAudioDataset, AddTargetDataset, Dictionary
-from fairseq.tasks.audio_classification import LabelEncoder
-import copy
-from tqdm import tqdm
-import tempfile
+import argparse
+import os
+import scipy.io.wavfile as wav
 import numpy as np
-import json
+
+from fairseq import options
+from speech_detecting import SpeechDetecting
+from language_identify import LanguageIdentify
+from error_codes import *
 
 
-def subset_manifest(infer_manifest, veri_pair):
-    with open(infer_manifest) as ff, open(veri_pair) as gg, tempfile.NamedTemporaryFile(
-            "w", delete=False
-    ) as ww:
-        fnames = ff.read().strip().split("\n")
-        basedir = fnames[0]
-        needed_fname = []
-        for gi in gg.read().strip().split("\n"):
-            _, x1, x2 = gi.split()
-            needed_fname.append(x1)
-            needed_fname.append(x2)
-        needed_fname = set(needed_fname)
+class LID:
 
-        ww.write(basedir + "\n")
-        for ii in range(1, len(fnames)):
-            x1, x2 = fnames[ii].split()
-            if x1 in needed_fname:
-                ww.write(fnames[ii] + "\n")
-    print(f"| subset manifest for verification: {ww.name}")
-    return ww.name
+    def __init__(self,
+                 language_model,
+                 lang_dict_dir,
+                 debug=False,
+                 temp_path='./temp',
+                 speech_segment_count=5,
+                 speech_segment_duration=5,
+                 speech_score_threshold=0.7,
+                 parse_start_offset=60,
+                 top_k=3,
+                 denoise_model=None):
+        np.random.seed(123)
+        args_parser = options.get_generation_parser(default_task="audio_classification")
+        input_args = []
+        input_args.append(lang_dict_dir)
+        input_args.append('--path')
+        input_args.append(language_model)
+        self.args = options.parse_args_and_arch(args_parser, input_args=input_args)
+        self.args.debug = debug
+        self.args.temp_path = temp_path
+        self.args.speech_segment_count = speech_segment_count
+        self.args.speech_segment_duration = speech_segment_duration
+        self.args.speech_score_threshold = speech_score_threshold
+        self.args.parse_start_offset = parse_start_offset
+        self.args.top_k = top_k
+        self.args.denoise_model = denoise_model
+        self.language_identify = LanguageIdentify(self.args)
+        self.speech_detecting = SpeechDetecting(self.args)
+
+    def infer_language(self, audio_file):
+        ret, samples = self.speech_detecting.load_audio_samples(audio_file)
+        if ret < 0:
+            print(f'load audio file failed, ret:{ret}')
+            exit(1)
+        ret, speech_list = self.speech_detecting.find_speech_list(samples, args.speech_score_threshold,
+                                                                  args.speech_segment_duration)
+        print(f'find speech result code:{ret}')
+
+        if 0 <= ret < args.speech_segment_count:
+            # try again
+            ret, speech_list = self.speech_detecting.find_speech_list(samples, max(args.speech_score_threshold - 0.2, 0.4),
+                                                                      max(args.speech_segment_duration - 2, 3))
+            print(f'try to find speech result code:{ret}')
+
+        if args.debug:
+            if ret > 0:
+                dir_path = args.temp_dir
+                print(f'save audio seg and manifest file to dir:{dir_path}')
+                if not os.path.exists(dir_path):
+                    os.makedirs(dir_path)
+                index = 0
+                file_path_list = []
+                for speech_obj in speech_list:
+                    print(f'speech_obj:{speech_obj}')
+                    index += 1
+                    file_path = os.path.join(dir_path, f'index_{index}.wav')
+                    wav.write(file_path, 16000, speech_obj.samples)
+                    file_path_list.append(os.path.abspath(file_path))
+
+                manifest_tsv_file = os.path.join(dir_path, 'manifest.tsv')
+                manifest_lang_file = os.path.join(dir_path, 'manifest.lang')
+                with open(manifest_tsv_file, mode='w+', encoding='utf-8') as f:
+                    f.write("/\n")
+                    for file_path in file_path_list:
+                        f.write(f'{file_path}\t16000\n')
+                with open(manifest_lang_file, mode='w+', encoding='utf-8') as f:
+                    for _ in file_path_list:
+                        f.write('eng\t1\n')
+
+        if ret < 0:
+            return ret, None
+        predictions = self.language_identify.infer([speech_obj.samples for speech_obj in speech_list])
+        if args.debug:
+            print(f'prediction origin result:{predictions}')
+
+        total_score = 0
+        min_threshold = 0.4
+        valid_count = 0
+        language_score_map = {}
+        for key, prediction in predictions.items():
+            for language_str, score in prediction:
+                if score < min_threshold:
+                    continue
+                valid_count += 1
+                total_score += score
+
+                language_total_score = 0
+                if language_str in language_score_map:
+                    language_total_score = language_score_map[language_str]
+                language_total_score += score
+                language_score_map[language_str] = language_total_score
+
+        if args.debug:
+            print(f'language resort map:{language_score_map}')
+        result_list = []
+        if len(language_score_map) == 0:
+            return ERROR_CODE_NO_VALID_LANGUAGE, None
+
+        for language_str, score in language_score_map.items():
+            result_list.append((language_str, float(score * 100 / total_score)))
+        result_list = sorted(result_list, key=lambda language_obj: language_obj[1], reverse=True)
+
+        if args.debug:
+            print(f'result_list:{result_list}')
+        return valid_count, result_list
 
 
-def wrap_target_dataset(infer_manifest, dataset, task):
-    label_path = infer_manifest.replace(".tsv", ".lang")
-    text_compressor = TextCompressor(level=TextCompressionLevel.none)
-    with open(label_path, "r") as f:
-        labels = [text_compressor.compress(l) for i, l in enumerate(f)]
-        assert len(labels) == len(dataset)
+if __name__ == '__main__':
+    audio_file = "/Users/bevis/PycharmProjects/LID/dataset/test_100/mp3/a03f2c4780798a5398c86b196e479275.mp3"
+    # audio_file = "http://vfx.mtime.cn/Video/2019/06/27/mp4/190627231412433967.mp4"
+    parser = argparse.ArgumentParser(add_help=True)
+    # speech detecting
+    parser.add_argument(
+        '--audio-file', type=str, default=audio_file,
+        help='Audio file to detect language, support local file and online url')
+    parser.add_argument(
+        '--debug', type=bool, default=True,
+        help='Debug mode.')
+    parser.add_argument(
+        '--speech-segment-count', type=int, default=5,
+        help='The segment count need to detect language, default:5')
+    parser.add_argument(
+        '--speech-segment-duration', type=int, default=5,
+        help='The length of each speech segment, unit:second, default:5')
+    parser.add_argument(
+        '--speech-score-threshold', type=float, default=0.7, help='The threshold, range:0-1,unit:float, default:0.7')
+    parser.add_argument(
+        '--parse-start-offset', type=int, default=60,
+        help='The file start offset that need to skip, unit:second, default:60')
+    parser.add_argument(
+        '--temp-dir', type=str, default='./temp',
+        help='The temp dir use to save temp file, default:./temp')
 
-    process_label = LabelEncoder(task.target_dictionary)
-    dataset = AddTargetDataset(
-        dataset,
-        labels,
-        pad=task.target_dictionary.pad(),
-        eos=task.target_dictionary.eos(),
-        batch_targets=True,
-        process_label=process_label,
-        add_to_input=False,
-    )
-    return dataset
-
-
-def resample_data(source, padding_mask, n_sample, max_sample_len):
-    # source: BxT
-    # padding_mask: BxT
-    B = source.shape[0]
-    T = source.shape[1]
-    sources = []
-    padding_masks = []
-    if B == 1:
-        return [source], [None]
-    seq_len = (~padding_mask).sum(1)
-    for jj in range(n_sample):
-        new_source = source.new_zeros(B, max_sample_len)
-        new_padding_mask = padding_mask.new_zeros(B, max_sample_len)
-        for ii in range(B):
-            if seq_len[ii] > max_sample_len:
-                start = np.random.randint(0, seq_len[ii] - max_sample_len + 1)
-                end = start + max_sample_len
-            else:
-                start = 0
-                end = seq_len[ii]
-            new_source[ii, 0: end - start] = source[ii, start:end]
-            new_padding_mask[ii, end - start + 1:] = True
-        sources.append(new_source)
-        padding_masks.append(new_padding_mask)
-    return sources, padding_masks
-
-
-def resample_sample(sample, n_sample, max_sample_len):
-    new_sources, new_padding_masks = resample_data(
-        sample["net_input"]["source"],
-        sample["net_input"]["padding_mask"],
-        n_sample,
-        max_sample_len,
-    )
-    new_samples = []
-    for ii in range(n_sample):
-        new_sample = copy.deepcopy(sample)
-        new_sample["net_input"]["source"] = new_sources[ii]
-        new_sample["net_input"]["padding_mask"] = new_padding_masks[ii]
-        new_samples.append(new_sample)
-    return new_samples
-
-
-def dict_to_nparr(dd):
-    dict_class = []
-    dict_idx = []
-    for ii, jj in enumerate(dd.symbols):
-        dict_idx.append(ii)
-        dict_class.append(jj)
-    dict_idx = np.array(dict_idx)
-    dict_class = np.array(dict_class)
-    return dict_class, dict_idx
-
-
-if __name__ == "__main__":
-    np.random.seed(123)
-    # Parse command-line arguments for generation
-    parser = options.get_generation_parser(default_task="audio_classification")
-    # parser.add_argument('--infer-merge', type=str, default='mean')
-    parser.add_argument("--infer-xtimes", type=int, default=1)
+    # language identify
     parser.add_argument("--infer-num-samples", type=int, default=None)
     parser.add_argument("--top-k", type=int, default=3)
+
     parser.add_argument(
-        "--infer-max-sample-size", type=int, default=5 * 16000
-    )  # 5 secs
-    parser.add_argument("--infer-manifest", required=True, type=str)
-    parser.add_argument("--output-path", default="/tmp/", type=str)
+        '--language-model', type=str, default='./pretrain/mms1b_l126.pt',
+        help='The model use to detect language class, default:./pretrain/mms1b_l126.pt')
 
-    args = options.parse_args_and_arch(parser)
-    # Setup task
-    # task = tasks.setup_task(args)
-    use_cuda = not args.cpu
-    if use_cuda and not torch.cuda.is_available():
-        use_cuda = False
-    print(f"use_cuda:{use_cuda}")
-    # Load model & task
-    print("| loading model from {}".format(args.path))
-    arg_overrides = {
-        "task": {
-            "data": args.data
-        },
-        # 'mask_prob': 0
-        # 'max_sample_size': sys.maxsize,
-        # 'min_sample_size': 0,
-    }
-    state = checkpoint_utils.load_checkpoint_to_cpu(args.path, arg_overrides)
+    parser.add_argument(
+        '--lang-dict-dir', type=str, default='./pretrain',
+        help='The dir contains the file of language, default:./pretrain')
 
-    models, _model_args, task = checkpoint_utils.load_model_ensemble_and_task(
-        [args.path], arg_overrides=arg_overrides, task=None, state=state
-    )
-    model = models[0]
-    model.eval()
-    if use_cuda:
-        model.cuda()
-    # Load dataset
+    parser.add_argument(
+        '--denoise-model', type=str, default=None,
+        help='The model use to denosie to make speech clear, default:None')
+    args = parser.parse_args()
 
-    dict_class, dict_idx = dict_to_nparr(task.target_dictionary)
+    lid = LID(language_model=args.language_model, lang_dict_dir=args.lang_dict_dir, debug=args.debug,
+              speech_segment_count=args.speech_segment_count, speech_segment_duration=args.speech_segment_duration,
+              speech_score_threshold=args.speech_score_threshold, parse_start_offset=args.parse_start_offset,
+              top_k=args.top_k, denoise_model=args.denoise_model)
+    ret, language_list = lid.infer_language(args.audio_file)
+    print(f'infer result:{ret}, language list:{language_list}')
 
-    infer_manifest = args.infer_manifest
-    infer_dataset = FileAudioDataset(
-        infer_manifest,
-        sample_rate=task.cfg.sample_rate,
-        max_sample_size=10 ** 10,  # task.cfg.max_sample_size,
-        min_sample_size=1,  # task.cfg.min_sample_size,
-        pad=True,
-        normalize=task.cfg.normalize,
-    )
-    # add target (if needed)
-    infer_dataset = wrap_target_dataset(infer_manifest, infer_dataset, task)
 
-    itr = task.get_batch_iterator(
-        dataset=infer_dataset,
-        max_sentences=1,
-        # max_tokens=args.max_tokens,
-        num_workers=4,
-    ).next_epoch_itr(shuffle=False)
-    predictions = {}
 
-    with torch.no_grad():
-        for _, sample in tqdm(enumerate(itr)):
-            # resample if needed
-            samples = resample_sample(
-                sample, args.infer_xtimes, args.infer_max_sample_size
-            )
-            for sample in samples:
-                sample = utils.move_to_cuda(sample) if use_cuda else sample
-                try:
-                    latent = model.forward_latent(**sample["net_input"])
-                except:
-                    latent = None
-                logit = model.forward(**sample["net_input"])
-                logit_lsm = torch.log_softmax(logit.squeeze(), dim=-1)
-                scores, indices = torch.topk(logit_lsm, args.top_k, dim=-1)
-                scores = torch.exp(scores).to("cpu").tolist()
-                indices = indices.to("cpu").tolist()
-                assert sample["id"].numel() == 1
-                sample_idx = sample["id"].to("cpu").tolist()[0]
-                assert sample_idx not in predictions
-                predictions[sample_idx] = [(task.target_dictionary[int(i)], s) for s, i in zip(scores, indices)]
 
-    with open(f"{args.output_path}/predictions.txt", "w") as fo:
-        for idx in range(len(infer_dataset)):
-            fo.write(json.dumps(predictions[idx]) + "\n")
 
-    print(f"Outputs will be located at - {args.output_path}/predictions.txt")
+
