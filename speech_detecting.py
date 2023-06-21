@@ -117,7 +117,7 @@ class SpeechDetecting:
             new_name = filename.split('.')[0]
 
             temp_file = os.path.join(os.path.dirname(audio_file_path), f'{new_name}.wav')
-            os.system(f'ffmpeg -allowed_extensions ALL -i "{audio_file_path}" -ar {sample_rate} -ac 1 {self.denoise_option} -y {temp_file}')
+            os.system(f'ffmpeg -i "{audio_file_path}" -ar {sample_rate} -ac 1 {self.denoise_option} -y {temp_file}')
             if os.path.exists(temp_file):
                 is_temp_file = True
                 audio_file_path = temp_file
