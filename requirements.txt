@@ -2,7 +2,6 @@ git+https://github.com/facebookresearch/fairseq.git@a29952ce6d313a4daf3e90647f8b
 pytest-runner==6.0.0
 paddlespeech
 paddlepaddle==2.4.1
-paddlepaddle-gpu==2.4.1
 scipy
 tqdm
 Pillow
