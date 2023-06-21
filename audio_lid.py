@@ -9,7 +9,7 @@ from language_identify import LanguageIdentify
 from error_codes import *
 
 
-class LID:
+class AudioLID:
 
     def __init__(self,
                  language_model,
@@ -119,8 +119,8 @@ class LID:
 
 
 if __name__ == '__main__':
-    audio_file = "/Users/bevis/PycharmProjects/LID/dataset/test_100/mp3/a03f2c4780798a5398c86b196e479275.mp3"
-    # audio_file = "http://vfx.mtime.cn/Video/2019/06/27/mp4/190627231412433967.mp4"
+    # audio_file = "//dataset/test_100/mp3/a03f2c4780798a5398c86b196e479275.mp3"
+    audio_file = "http://vfx.mtime.cn/Video/2019/06/27/mp4/190627231412433967.mp4"
     parser = argparse.ArgumentParser(add_help=True)
     # speech detecting
     parser.add_argument(
@@ -161,10 +161,10 @@ if __name__ == '__main__':
         help='The model use to denosie to make speech clear, default:None')
     args = parser.parse_args()
 
-    lid = LID(language_model=args.language_model, lang_dict_dir=args.lang_dict_dir, debug=args.debug,
-              speech_segment_count=args.speech_segment_count, speech_segment_duration=args.speech_segment_duration,
-              speech_score_threshold=args.speech_score_threshold, parse_start_offset=args.parse_start_offset,
-              top_k=args.top_k, denoise_model=args.denoise_model)
+    lid = AudioLID(language_model=args.language_model, lang_dict_dir=args.lang_dict_dir, debug=args.debug,
+                   speech_segment_count=args.speech_segment_count, speech_segment_duration=args.speech_segment_duration,
+                   speech_score_threshold=args.speech_score_threshold, parse_start_offset=args.parse_start_offset,
+                   top_k=args.top_k, denoise_model=args.denoise_model)
     ret, language_list = lid.infer_language(args.audio_file)
     print(f'infer result:{ret}, language list:{language_list}')
 
