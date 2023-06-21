@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='LID',
+    name='audio-LID',
     version='0.1',
     description='A project that detect the language from a audio file',
     author='bevis',
