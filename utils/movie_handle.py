@@ -168,7 +168,7 @@ def infer_movie_language(movie_path, save_dir='./dataset/movie_test', background
     if not os.path.exists(unknown_dir):
         os.makedirs(unknown_dir)
 
-    temp_dir = os.path.join(os.path.dirname(save_dir), 'temp')
+    temp_dir = os.path.join(os.path.dirname(save_dir), '../audio_lid/temp')
     if not os.path.exists(temp_dir):
         os.makedirs(temp_dir)
 
@@ -1536,8 +1536,8 @@ if __name__ == '__main__':
     print('argv:', sys.argv)
     # print('listdir2', os.listdir('/ProjectRoot/Spoken-language-identification/dataset/online5-all-fuck'))
     movie_index = 0
-    movie_list_file_path = 'movie/test_100_list.txt'
-    movie_mp3_save_dir = 'dataset/test_100/mp3'
+    movie_list_file_path = '../movie/test_100_list.txt'
+    movie_mp3_save_dir = '../dataset/test_100/mp3'
     movie_wav_save_dir = 'dataset/test_100/wav'
     movie_wav_flag_dir = 'dataset/test_100/flag'
     # copy_download_mp3(movie_list_file_path, movie_wav_input_dir, movie_wav_save_dir)
