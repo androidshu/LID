@@ -5,3 +5,5 @@
 mms1b_l126.pt
 __pycache__
 movie/*
+dist/*
+audio_lid.egg-info/*
