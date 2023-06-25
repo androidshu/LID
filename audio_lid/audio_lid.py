@@ -42,6 +42,18 @@ class AudioLID:
         self.speech_detecting = SpeechDetecting(self.args)
 
     def infer_language(self, audio_file):
+        """
+        :param audio_file: The audio url needs to detect the language,
+                support both local file paths and online URLs
+                support both mp4 and mp3 formats
+        :return: ret the result, if big then zero mean successful, otherwise error,
+                the error code refer to error_codes.py
+                language_list: the language list inferred by the given audio file is sorted by score
+                format likes: [('eng', 90.0), ('ch', 10.0)]
+                            or [('eng', 100.0)],
+                            the total score always equal 100.
+                The language short name like 'eng' to full name map:https://dl.fbaipublicfiles.com/mms/lid/mms1b_l126_langs.html
+        """
         ret, samples = self.speech_detecting.load_audio_samples(audio_file)
         if ret < 0:
             print(f'load audio file failed, ret:{ret}')
@@ -170,7 +182,9 @@ if __name__ == '__main__':
 
     if args.debug:
         with open(f"{args.output_path}/predictions.txt", "w") as fo:
-            fo.write(json.dumps(language_list) + "\n")
+            fo.write(f'ret:{ret}\n')
+            if language_list is not None and len(language_list) > 0:
+                fo.write(json.dumps(language_list) + "\n")
     print(f'infer result:{ret}, language list:{language_list}')
 
 
