@@ -92,14 +92,14 @@ class SpeechDetecting:
         is_temp_file = False
 
         if audio_file_path.startswith("http"):
-            temp_dir = self.args.temp_dir
+            output_path = self.args.output_path
             temp_name = f'{generate_md5(audio_file_path)}.wav'
-            temp_file_path = os.path.join(temp_dir, temp_name)
+            temp_file_path = os.path.join(output_path, temp_name)
             print(f'Warning: This is a online url, audio_file:{audio_file_path}, '
                   f'start downloading to temp file:{temp_file_path}')
 
-            if not os.path.exists(temp_dir):
-                os.makedirs(temp_dir)
+            if not os.path.exists(output_path):
+                os.makedirs(output_path)
             os.system(f'ffmpeg -i "{audio_file_path}" -ar {sample_rate} -ac 1 {self.denoise_option} -y {temp_file_path}')
             if not os.path.exists(temp_file_path):
                 return ERROR_CODE_FILE_DOWNLOAD_FAILED, None
@@ -285,7 +285,7 @@ if __name__ == '__main__':
 
     if args.debug:
         if ret > 0:
-            dir_path = args.temp_dir
+            dir_path = args.output_path
             print(f'save audio seg and manifest file to dir:{dir_path}')
             if not os.path.exists(dir_path):
                 os.makedirs(dir_path)

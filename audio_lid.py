@@ -2,6 +2,7 @@ import argparse
 import os
 import scipy.io.wavfile as wav
 import numpy as np
+import json
 
 from fairseq import options
 from speech_detecting import SpeechDetecting
@@ -15,7 +16,7 @@ class AudioLID:
                  language_model,
                  lang_dict_dir,
                  debug=False,
-                 temp_path='./temp',
+                 output_path='./temp',
                  speech_segment_count=5,
                  speech_segment_duration=5,
                  speech_score_threshold=0.7,
@@ -30,7 +31,7 @@ class AudioLID:
         input_args.append(language_model)
         self.args = options.parse_args_and_arch(args_parser, input_args=input_args)
         self.args.debug = debug
-        self.args.temp_path = temp_path
+        self.args.output_path = output_path
         self.args.speech_segment_count = speech_segment_count
         self.args.speech_segment_duration = speech_segment_duration
         self.args.speech_score_threshold = speech_score_threshold
@@ -57,7 +58,7 @@ class AudioLID:
 
         if args.debug:
             if ret > 0:
-                dir_path = args.temp_dir
+                dir_path = args.output_path
                 print(f'save audio seg and manifest file to dir:{dir_path}')
                 if not os.path.exists(dir_path):
                     os.makedirs(dir_path)
@@ -141,8 +142,8 @@ if __name__ == '__main__':
         '--parse-start-offset', type=int, default=60,
         help='The file start offset that need to skip, unit:second, default:60')
     parser.add_argument(
-        '--temp-dir', type=str, default='./temp',
-        help='The temp dir use to save temp file, default:./temp')
+        '--output-path', type=str, default='./temp',
+        help='The output dir path use to save temp file in debug mode, default:./temp')
 
     # language identify
     parser.add_argument("--infer-num-samples", type=int, default=None)
@@ -164,8 +165,12 @@ if __name__ == '__main__':
     lid = AudioLID(language_model=args.language_model, lang_dict_dir=args.lang_dict_dir, debug=args.debug,
                    speech_segment_count=args.speech_segment_count, speech_segment_duration=args.speech_segment_duration,
                    speech_score_threshold=args.speech_score_threshold, parse_start_offset=args.parse_start_offset,
-                   top_k=args.top_k, denoise_model=args.denoise_model)
+                   top_k=args.top_k, denoise_model=args.denoise_model, output_path=args.output_path)
     ret, language_list = lid.infer_language(args.audio_file)
+
+    if args.debug:
+        with open(f"{args.output_path}/predictions.txt", "w") as fo:
+            fo.write(json.dumps(language_list) + "\n")
     print(f'infer result:{ret}, language list:{language_list}')
 
 
