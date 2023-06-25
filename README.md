@@ -39,7 +39,7 @@ model: https://dl.fbaipublicfiles.com/mms/lid/mms1b_l126.pt
 
 language dict:https://dl.fbaipublicfiles.com/mms/lid/dict/l126/dict.lang.txt
 
-1. make dir /your_path/pretain and put the two files in it.
+1. make dir /your_path/pretrain and put the two files in it.
 2. language_model=/your_path/pretrain/mms1b_l126.pt
 3. lang_dict_dir=/your_path/pretrain
 
