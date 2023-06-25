@@ -34,7 +34,7 @@ Using pip:
 3. Installing pytorch-cuda through the website link:https://pytorch.org
 4. pip install paddlepaddle-gpu==2.4.1 (optional, for nvidia-gpu cuda environment)
 
-#Pretrain files
+# Pretrain files  
 model: https://dl.fbaipublicfiles.com/mms/lid/mms1b_l126.pt
 
 language dict:https://dl.fbaipublicfiles.com/mms/lid/dict/l126/dict.lang.txt
