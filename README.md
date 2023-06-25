@@ -64,10 +64,11 @@ python3 audio_lid.py --audio-file "your audio file path" --lang-dict-dir "your l
                     --language-model "your model path" --debug True --output-path "the temp file dir in debug mode"
 
 ret: The result, if big then zero mean successful, otherwise error,
-     the error code refer to error_codes.py
-language_list: the language list inferred by the given audio file is sorted by score
-     format likes: [('eng', 90.0), ('ch', 10.0)] 
-     or [('eng', 100.0)], 
-     the total score always equal 100.
+      the error code refer to error_codes.py
+
+language_list: the language list inferred by the given audio file is sorted by score  
+     format likes: [('eng', 90.0), ('ch', 10.0)]   
+     or [('eng', 100.0)],   
+     the total score always equal 100.  
      The language short name like 'eng' to full name map:https://github.com/androidshu/audio-lid/blob/main/audio_lid/pretrain/language.txt
 
