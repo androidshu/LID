@@ -69,5 +69,5 @@ language_list: the language list inferred by the given audio file is sorted by s
      format likes: [('eng', 90.0), ('ch', 10.0)] 
      or [('eng', 100.0)], 
      the total score always equal 100.
-     The language short name like 'eng' to full name map:https://dl.fbaipublicfiles.com/mms/lid/mms1b_l126_langs.html
+     The language short name like 'eng' to full name map:https://github.com/androidshu/audio-lid/blob/main/audio_lid/pretrain/language.txt
 
