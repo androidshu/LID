@@ -46,19 +46,19 @@ class AudioLID:
         if ret < 0:
             print(f'load audio file failed, ret:{ret}')
             exit(1)
-        ret, speech_list = self.speech_detecting.find_speech_list(samples, args.speech_score_threshold,
-                                                                  args.speech_segment_duration)
+        ret, speech_list = self.speech_detecting.find_speech_list(samples, self.args.speech_score_threshold,
+                                                                  self.args.speech_segment_duration)
         print(f'find speech result code:{ret}')
 
-        if 0 <= ret < args.speech_segment_count:
+        if 0 <= ret < self.args.speech_segment_count:
             # try again
-            ret, speech_list = self.speech_detecting.find_speech_list(samples, max(args.speech_score_threshold - 0.2, 0.4),
-                                                                      max(args.speech_segment_duration - 2, 3))
+            ret, speech_list = self.speech_detecting.find_speech_list(samples, max(self.args.speech_score_threshold - 0.2, 0.4),
+                                                                      max(self.args.speech_segment_duration - 2, 3))
             print(f'try to find speech result code:{ret}')
 
-        if args.debug:
+        if self.args.debug:
             if ret > 0:
-                dir_path = args.output_path
+                dir_path = self.args.output_path
                 print(f'save audio seg and manifest file to dir:{dir_path}')
                 if not os.path.exists(dir_path):
                     os.makedirs(dir_path)
@@ -84,7 +84,7 @@ class AudioLID:
         if ret < 0:
             return ret, None
         predictions = self.language_identify.infer([speech_obj.samples for speech_obj in speech_list])
-        if args.debug:
+        if self.args.debug:
             print(f'prediction origin result:{predictions}')
 
         total_score = 0
@@ -104,7 +104,7 @@ class AudioLID:
                 language_total_score += score
                 language_score_map[language_str] = language_total_score
 
-        if args.debug:
+        if self.args.debug:
             print(f'language resort map:{language_score_map}')
         result_list = []
         if len(language_score_map) == 0:
@@ -114,7 +114,7 @@ class AudioLID:
             result_list.append((language_str, float(score * 100 / total_score)))
         result_list = sorted(result_list, key=lambda language_obj: language_obj[1], reverse=True)
 
-        if args.debug:
+        if self.args.debug:
             print(f'result_list:{result_list}')
         return valid_count, result_list
 
