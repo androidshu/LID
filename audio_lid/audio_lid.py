@@ -8,6 +8,7 @@ from fairseq import options
 from speech_detecting import SpeechDetecting
 from language_identify import LanguageIdentify
 from error_codes import *
+import audio_utils
 
 
 class AudioLID:
@@ -16,7 +17,7 @@ class AudioLID:
                  language_model,
                  lang_dict_dir,
                  debug=False,
-                 output_path='./temp',
+                 temp_dir='./temp',
                  speech_segment_count=5,
                  speech_segment_duration=5,
                  speech_score_threshold=0.7,
@@ -31,7 +32,7 @@ class AudioLID:
         input_args.append(language_model)
         self.args = options.parse_args_and_arch(args_parser, input_args=input_args)
         self.args.debug = debug
-        self.args.output_path = output_path
+        self.args.temp_dir = temp_dir
         self.args.speech_segment_count = speech_segment_count
         self.args.speech_segment_duration = speech_segment_duration
         self.args.speech_score_threshold = speech_score_threshold
@@ -68,9 +69,9 @@ class AudioLID:
                                                                       max(self.args.speech_segment_duration - 2, 3))
             print(f'try to find speech result code:{ret}')
 
-        if self.args.debug:
+        if self.args.debug and self.args.temp_dir is not None:
             if ret > 0:
-                dir_path = self.args.output_path
+                dir_path = self.args.temp_dir
                 print(f'save audio seg and manifest file to dir:{dir_path}')
                 if not os.path.exists(dir_path):
                     os.makedirs(dir_path)
@@ -128,17 +129,21 @@ class AudioLID:
 
         if self.args.debug:
             print(f'result_list:{result_list}')
-        return valid_count, result_list
+        return len(result_list), result_list
 
 
 if __name__ == '__main__':
-    # audio_file = "//dataset/test_100/mp3/a03f2c4780798a5398c86b196e479275.mp3"
-    audio_file = "http://vfx.mtime.cn/Video/2019/06/27/mp4/190627231412433967.mp4"
+    audio_file = "/Users/bevis/PycharmProjects/audio-lid/dataset/test_100/mp3/3cb6c16887c1c9f5f7c6ee1f9ab9f5a2.mp3"
+    # audio_file = "http://vfx.mtime.cn/Video/2019/06/27/mp4/190627231412433967.mp4"
+    audio_file_list = "/Users/bevis/PycharmProjects/audio-lid/movie/test_2_list.txt"
     parser = argparse.ArgumentParser(add_help=True)
     # speech detecting
     parser.add_argument(
         '--audio-file', type=str, default=audio_file,
         help='Audio file to detect language, support local file and online url')
+    parser.add_argument(
+        '--audio-file-list', type=str, default=None,
+        help='Audio file list to detect language, support local file and online url')
     parser.add_argument(
         '--debug', type=bool, default=True,
         help='Debug mode.')
@@ -154,8 +159,11 @@ if __name__ == '__main__':
         '--parse-start-offset', type=int, default=60,
         help='The file start offset that need to skip, unit:second, default:60')
     parser.add_argument(
-        '--output-path', type=str, default='./temp',
+        '--temp-dir', type=str, default='./temp',
         help='The output dir path use to save temp file in debug mode, default:./temp')
+    parser.add_argument(
+        '--output-path', type=str, default=None,
+        help='The output dir path use to save result file, default:None')
 
     # language identify
     parser.add_argument("--infer-num-samples", type=int, default=None)
@@ -177,15 +185,32 @@ if __name__ == '__main__':
     lid = AudioLID(language_model=args.language_model, lang_dict_dir=args.lang_dict_dir, debug=args.debug,
                    speech_segment_count=args.speech_segment_count, speech_segment_duration=args.speech_segment_duration,
                    speech_score_threshold=args.speech_score_threshold, parse_start_offset=args.parse_start_offset,
-                   top_k=args.top_k, denoise_model=args.denoise_model, output_path=args.output_path)
-    ret, language_list = lid.infer_language(args.audio_file)
+                   top_k=args.top_k, denoise_model=args.denoise_model, temp_dir=args.temp_dir)
+    audio_file_path_list = []
+    if args.audio_file_list is not None:
+        with open(args.audio_file_list, 'r') as f:
+            audio_file_path_list = f.readlines()
+    else:
+        audio_file_path_list.append(args.audio_file)
 
-    if args.debug:
-        with open(f"{args.output_path}/predictions.txt", "w") as fo:
-            fo.write(f'ret:{ret}\n')
-            if language_list is not None and len(language_list) > 0:
-                fo.write(json.dumps(language_list) + "\n")
-    print(f'infer result:{ret}, language list:{language_list}')
+    for audio_file_path in audio_file_path_list:
+        audio_file_path = audio_file_path.replace('\n', '').replace('\r', '').replace('\t', '')
+        if args.debug:
+            print(f'start infer audio:{audio_file_path}')
+        ret, language_list = lid.infer_language(audio_file_path)
+
+        if args.output_path is not None:
+            if not os.path.exists(args.output_path):
+                os.makedirs(args.output_path)
+            md5 = audio_utils.generate_md5(audio_file_path)
+            prediction_file_path = f'{args.output_path}/{md5}_predictions.txt'
+            with open(prediction_file_path, "w") as fo:
+                fo.write(f'ret:{ret}\n')
+                if language_list is not None and len(language_list) > 0:
+                    fo.write(json.dumps(language_list) + "\n")
+            if args.debug:
+                print(f'Prediction result save in file:{prediction_file_path}')
+        print(f'infer result:{ret}, language list:{language_list}')
 
 
 

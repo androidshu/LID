@@ -9,19 +9,12 @@ import paddle
 import numpy as np
 import argparse
 import scipy.io.wavfile as wav
-import hashlib
+import audio_utils
 
 
 class SpeechDetectObject:
     def __str__(self):
         return f'label:{self.label}, score:{self.score}, start:{self.start}, stop:{self.stop}'
-
-
-def generate_md5(url):
-    md5 = hashlib.md5()
-    md5.update(url.encode('utf-8'))
-    md5_name = md5.hexdigest()
-    return md5_name
 
 
 class SpeechDetecting:
@@ -92,14 +85,14 @@ class SpeechDetecting:
         is_temp_file = False
 
         if audio_file_path.startswith("http"):
-            output_path = self.args.output_path
-            temp_name = f'{generate_md5(audio_file_path)}.wav'
-            temp_file_path = os.path.join(output_path, temp_name)
+            temp_dir = self.args.temp_dir
+            temp_name = f'{audio_utils.generate_md5(audio_file_path)}.wav'
+            temp_file_path = os.path.join(temp_dir, temp_name)
             print(f'Warning: This is a online url, audio_file:{audio_file_path}, '
                   f'start downloading to temp file:{temp_file_path}')
 
-            if not os.path.exists(output_path):
-                os.makedirs(output_path)
+            if not os.path.exists(temp_dir):
+                os.makedirs(temp_dir)
             os.system(f'ffmpeg -i "{audio_file_path}" -ar {sample_rate} -ac 1 {self.denoise_option} -y {temp_file_path}')
             if not os.path.exists(temp_file_path):
                 return ERROR_CODE_FILE_DOWNLOAD_FAILED, None
@@ -129,6 +122,7 @@ class SpeechDetecting:
             sr=sample_rate,
             mono=True,
             dtype='float32')
+        samples = samples if len(samples.shape) <= 1 else samples[:, 1]
 
         if is_temp_file:
             if self.args.debug:
@@ -225,7 +219,7 @@ class SpeechDetecting:
 
 
 if __name__ == '__main__':
-    # audio_file = "/Users/bevis/PycharmProjects/LID/dataset/test_100/mp3/a03f2c4780798a5398c86b196e479275.mp3"
+    # audio_file = "/Users/bevis/PycharmProjects/audio-lid/dataset/test_100/mp3/19d77ef6cc1fcc4b266b1886c4afb18d.mp3"
     audio_file = "http://vfx.mtime.cn/Video/2019/06/27/mp4/190627231412433967.mp4"
 
     parser = argparse.ArgumentParser(add_help=True)
@@ -249,6 +243,9 @@ if __name__ == '__main__':
     parser.add_argument(
         '--temp-dir', type=str, default='./temp',
         help='The temp dir use to save temp file, default:./temp')
+    parser.add_argument(
+        '--output-path', type=str, default=None,
+        help='The output dir use to save result files, default:None')
     parser.add_argument(
         '--denoise-model', type=str, default=None,
         help='The model use to denosie to make speech clear, default:None')
@@ -283,30 +280,32 @@ if __name__ == '__main__':
                                             max(args.speech_segment_duration - 2, 3))
         print(f'try to find speech result code:{ret}')
 
-    if args.debug:
-        if ret > 0:
-            dir_path = args.output_path
+    if ret > 0 and args.output_path is not None:
+        dir_path = args.output_path
+        if args.debug:
             print(f'save audio seg and manifest file to dir:{dir_path}')
-            if not os.path.exists(dir_path):
-                os.makedirs(dir_path)
-            index = 0
-            file_path_list = []
-            for speech_obj in speech_list:
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+        index = 0
+        file_path_list = []
+        for speech_obj in speech_list:
+            if args.debug:
                 print(f'speech_obj:{speech_obj}')
-                index += 1
-                file_path = os.path.join(dir_path, f'index_{index}.wav')
-                wav.write(file_path, 16000, speech_obj.samples)
-                file_path_list.append(os.path.abspath(file_path))
+            index += 1
+            file_path = os.path.join(dir_path, f'index_{index}.wav')
+            wav.write(file_path, 16000, speech_obj.samples)
+            file_path_list.append(os.path.abspath(file_path))
 
-            manifest_tsv_file = os.path.join(dir_path, 'manifest.tsv')
-            manifest_lang_file = os.path.join(dir_path, 'manifest.lang')
-            with open(manifest_tsv_file, mode='w+', encoding='utf-8') as f:
-                f.write("/\n")
-                for file_path in file_path_list:
-                    f.write(f'{file_path}\t16000\n')
-            with open(manifest_lang_file, mode='w+', encoding='utf-8') as f:
-                for file_path in file_path_list:
-                    f.write('eng\t1\n')
-
+        manifest_tsv_file = os.path.join(dir_path, 'manifest.tsv')
+        manifest_lang_file = os.path.join(dir_path, 'manifest.lang')
+        with open(manifest_tsv_file, mode='w+', encoding='utf-8') as f:
+            f.write("/\n")
+            for file_path in file_path_list:
+                f.write(f'{file_path}\t16000\n')
+        with open(manifest_lang_file, mode='w+', encoding='utf-8') as f:
+            for file_path in file_path_list:
+                f.write('eng\t1\n')
+        if args.debug:
+            print(f'Out put file dir:{args.output_path}')
 
 
