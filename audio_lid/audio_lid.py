@@ -133,8 +133,8 @@ class AudioLID:
 
 
 if __name__ == '__main__':
-    audio_file = "/Users/bevis/PycharmProjects/audio-lid/dataset/test_100/mp3/3cb6c16887c1c9f5f7c6ee1f9ab9f5a2.mp3"
-    # audio_file = "http://vfx.mtime.cn/Video/2019/06/27/mp4/190627231412433967.mp4"
+    # audio_file = "/Users/bevis/PycharmProjects/audio-lid/dataset/test_100/mp3/3cb6c16887c1c9f5f7c6ee1f9ab9f5a2.mp3"
+    audio_file = "http://vfx.mtime.cn/Video/2019/06/27/mp4/190627231412433967.mp4"
     audio_file_list = "/Users/bevis/PycharmProjects/audio-lid/movie/test_2_list.txt"
     parser = argparse.ArgumentParser(add_help=True)
     # speech detecting
