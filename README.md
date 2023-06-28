@@ -29,7 +29,7 @@ Using pip:
 1. pip install git+https://github.com/androidshu/audio-lid.git
 
 ## For nvidia-gpu 
-1. You need to check and install th GPU driver.
+1. You need to check and install the GPU driver.
 2. Checking the CUDA version by typing 'nvidia-smi' on the command line 
 3. Installing pytorch-cuda through the website link:https://pytorch.org
 4. pip install paddlepaddle-gpu==2.4.1 (optional, for nvidia-gpu cuda environment)
