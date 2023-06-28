@@ -244,7 +244,7 @@ if __name__ == '__main__':
         '--temp-dir', type=str, default='./temp',
         help='The temp dir use to save temp file, default:./temp')
     parser.add_argument(
-        '--output-path', type=str, default=None,
+        '--output-dir', type=str, default=None,
         help='The output dir use to save result files, default:None')
     parser.add_argument(
         '--denoise-model', type=str, default=None,
@@ -280,8 +280,8 @@ if __name__ == '__main__':
                                             max(args.speech_segment_duration - 2, 3))
         print(f'try to find speech result code:{ret}')
 
-    if ret > 0 and args.output_path is not None:
-        dir_path = args.output_path
+    if ret > 0 and args.output_dir is not None:
+        dir_path = args.output_dir
         if args.debug:
             print(f'save audio seg and manifest file to dir:{dir_path}')
         if not os.path.exists(dir_path):
@@ -306,6 +306,6 @@ if __name__ == '__main__':
             for file_path in file_path_list:
                 f.write('eng\t1\n')
         if args.debug:
-            print(f'Out put file dir:{args.output_path}')
+            print(f'Out put file dir:{args.output_dir}')
 
 

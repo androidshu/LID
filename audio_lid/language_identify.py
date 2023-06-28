@@ -147,7 +147,7 @@ if __name__ == "__main__":
         "--infer-max-sample-size", type=int, default=5 * 16000
     )  # 5 secs
     parser.add_argument("--infer-manifest", required="./pretrain", type=str)
-    parser.add_argument("--output-path", default="./temp", type=str)
+    parser.add_argument("--output-dir", default="./temp", type=str)
 
     args = options.parse_args_and_arch(parser)
     # Setup task
@@ -208,8 +208,8 @@ if __name__ == "__main__":
             assert sample_idx not in predictions
             predictions[sample_idx] = [(task.target_dictionary[int(i)], s) for s, i in zip(scores, indices)]
 
-    with open(f"{args.output_path}/predictions.txt", "w") as fo:
+    with open(f"{args.output_dir}/predictions.txt", "w") as fo:
         for idx in range(len(infer_dataset)):
             fo.write(json.dumps(predictions[idx]) + "\n")
 
-    print(f"Outputs will be located at - {args.output_path}/predictions.txt")
+    print(f"Outputs will be located at - {args.output_dir}/predictions.txt")

@@ -18,6 +18,7 @@ class AudioLID:
                  lang_dict_dir,
                  debug=False,
                  temp_dir='./temp',
+                 output_dir=None,
                  speech_segment_count=5,
                  speech_segment_duration=5,
                  speech_score_threshold=0.7,
@@ -33,6 +34,7 @@ class AudioLID:
         self.args = options.parse_args_and_arch(args_parser, input_args=input_args)
         self.args.debug = debug
         self.args.temp_dir = temp_dir
+        self.args.output_dir = output_dir
         self.args.speech_segment_count = speech_segment_count
         self.args.speech_segment_duration = speech_segment_duration
         self.args.speech_score_threshold = speech_score_threshold
@@ -69,18 +71,19 @@ class AudioLID:
                                                                       max(self.args.speech_segment_duration - 2, 3))
             print(f'try to find speech result code:{ret}')
 
-        if self.args.debug and self.args.temp_dir is not None:
+        if self.args.debug and self.args.output_dir is not None:
             if ret > 0:
-                dir_path = self.args.temp_dir
+                dir_path = self.args.output_dir
                 print(f'save audio seg and manifest file to dir:{dir_path}')
                 if not os.path.exists(dir_path):
                     os.makedirs(dir_path)
                 index = 0
                 file_path_list = []
+                md5 = audio_utils.generate_md5(audio_file)
                 for speech_obj in speech_list:
                     print(f'speech_obj:{speech_obj}')
                     index += 1
-                    file_path = os.path.join(dir_path, f'index_{index}.wav')
+                    file_path = os.path.join(dir_path, f'{md5}_{index}.wav')
                     wav.write(file_path, 16000, speech_obj.samples)
                     file_path_list.append(os.path.abspath(file_path))
 
@@ -145,7 +148,7 @@ def run():
         '--audio-file-list', type=str, default=None,
         help='Audio file list to detect language, support local file and online url')
     parser.add_argument(
-        '--debug', type=bool, default=True,
+        '--debug', type=bool, default=False,
         help='Debug mode.')
     parser.add_argument(
         '--speech-segment-count', type=int, default=5,
@@ -162,7 +165,7 @@ def run():
         '--temp-dir', type=str, default='./temp',
         help='The output dir path use to save temp file in debug mode, default:./temp')
     parser.add_argument(
-        '--output-path', type=str, default=None,
+        '--output-dir', type=str, default=None,
         help='The output dir path use to save result file, default:None')
 
     # language identify
@@ -185,7 +188,8 @@ def run():
     lid = AudioLID(language_model=args.language_model, lang_dict_dir=args.lang_dict_dir, debug=args.debug,
                    speech_segment_count=args.speech_segment_count, speech_segment_duration=args.speech_segment_duration,
                    speech_score_threshold=args.speech_score_threshold, parse_start_offset=args.parse_start_offset,
-                   top_k=args.top_k, denoise_model=args.denoise_model, temp_dir=args.temp_dir)
+                   top_k=args.top_k, denoise_model=args.denoise_model, temp_dir=args.temp_dir,
+                   output_dir=args.output_dir)
     audio_file_path_list = []
     if args.audio_file_list is not None:
         with open(args.audio_file_list, 'r') as f:
@@ -199,11 +203,11 @@ def run():
             print(f'start infer audio:{audio_file_path}')
         ret, language_list = lid.infer_language(audio_file_path)
 
-        if args.output_path is not None:
-            if not os.path.exists(args.output_path):
-                os.makedirs(args.output_path)
+        if args.output_dir is not None:
+            if not os.path.exists(args.output_dir):
+                os.makedirs(args.output_dir)
             md5 = audio_utils.generate_md5(audio_file_path)
-            prediction_file_path = f'{args.output_path}/{md5}_predictions.txt'
+            prediction_file_path = f'{args.output_dir}/{md5}_predictions.txt'
             with open(prediction_file_path, "w") as fo:
                 fo.write(f'ret:{ret}\n')
                 if language_list is not None and len(language_list) > 0:

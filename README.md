@@ -61,11 +61,11 @@ output_path='the temp file dir in debug mode')`
 
 ## In command line(When git clone):   
 python3 audio_lid.py --audio-file "your audio file path" --lang-dict-dir "your lang dict dir" 
-                    --language-model "your model path" --debug True --output-path "the result file need to save"
+                    --language-model "your model path" --debug True --output-dir "The output dir use to save result files"
 
 ## In command line(When pip install):   
 audio_lid --audio-file "your audio file path" --lang-dict-dir "your lang dict dir" 
-                    --language-model "your model path" --debug True --output-path "the result file need to save"
+                    --language-model "your model path" --debug True --output-dir "The output dir use to save result files"
 
 ## Result value explain
 
