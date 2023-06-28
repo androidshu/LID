@@ -59,14 +59,15 @@ output_path='the temp file dir in debug mode')`
 `more `
 
 
-In command line(When git clone):   
+##In command line(When git clone):   
 python3 audio_lid.py --audio-file "your audio file path" --lang-dict-dir "your lang dict dir" 
                     --language-model "your model path" --debug True --output-path "the result file need to save"
 
-In command line(When pip install):   
+##In command line(When pip install):   
 audio_lid --audio-file "your audio file path" --lang-dict-dir "your lang dict dir" 
                     --language-model "your model path" --debug True --output-path "the result file need to save"
 
+##Result value explain
 
 ret: The result, if big then zero mean successful, otherwise error,
       the error code refer to error_codes.py
