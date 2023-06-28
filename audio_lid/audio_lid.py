@@ -132,7 +132,7 @@ class AudioLID:
         return len(result_list), result_list
 
 
-if __name__ == '__main__':
+def run():
     # audio_file = "/Users/bevis/PycharmProjects/audio-lid/dataset/test_100/mp3/3cb6c16887c1c9f5f7c6ee1f9ab9f5a2.mp3"
     audio_file = "http://vfx.mtime.cn/Video/2019/06/27/mp4/190627231412433967.mp4"
     audio_file_list = "/Users/bevis/PycharmProjects/audio-lid/movie/test_2_list.txt"
@@ -211,6 +211,11 @@ if __name__ == '__main__':
             if args.debug:
                 print(f'Prediction result save in file:{prediction_file_path}')
         print(f'infer result:{ret}, language list:{language_list}')
+
+
+if __name__ == '__main__':
+    run()
+
 
 
 

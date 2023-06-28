@@ -6,7 +6,7 @@ setup(
     py_modules=["audio_lid"],
     entry_points={
         "console_scripts": [
-            "audio_lid=audio_lid:main",
+            "audio_lid=audio_lid:run",
         ],
     },
     description='A project that detect the language from a audio file',
