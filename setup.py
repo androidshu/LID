@@ -3,6 +3,12 @@ from setuptools import setup, find_packages
 setup(
     name='audio-lid',
     version='0.1',
+    py_modules=["audio_lid"],
+    entry_points={
+        "console_scripts": [
+            "audio_lid=audio_lid:main",
+        ],
+    },
     description='A project that detect the language from a audio file',
     author='bevis',
     author_email='javashu2012@gmail.com',
