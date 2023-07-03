@@ -13,11 +13,23 @@ installing anaconda first, then:
 
 # Dependency Introduction
 
-1. gcc >= 4.8.5 
+1. gcc >=7.1 (C++17) 
 2. python >= 3.9
 3. PyTorch >= 1.10.0
 
 OS support: Linux, Mac OSX
+
+# Installation Dependency
+
+pip install git+https://github.com/facebookresearch/fairseq.git@a29952ce6d313a4daf3e90647f8bf84cc6d4df6d#egg=fairseq
+  
+If has any network problems，you can clone it and install by zip file
+1.git clone https://github.com/facebookresearch/fairseq.git  
+2.cd fairseq  
+3.git checkout a29952ce6d313a4daf3e90647f8bf84cc6d4df6d  
+4.cd ..  
+5.tar -czvf fairseq.tar.gz fairseq/  
+6.pip install fairseq.tar.gz (speed up: pip install fairseq.tar.gz -i https://pypi.tuna.tsinghua.edu.cn/simple --trusted-host pypi.tuna.tsinghua.edu.cn)
 
 # Installation
 
@@ -51,7 +63,7 @@ In code:
 
 `//init audio lid`  
 `lid = AudioLID(language_model='your model path', lang_dict_dir='your lang dict dir', debug=True,
-output_path='the temp file dir in debug mode')`
+output_path='The output dir use to save result files')`
 
 `//infer`  
 `ret, language_list = lid.infer_language(audio_file_path_1)`  
