@@ -22,8 +22,8 @@ OS support: Linux, Mac OSX
 # Installation Dependency
 
 pip install git+https://github.com/facebookresearch/fairseq.git@a29952ce6d313a4daf3e90647f8bf84cc6d4df6d#egg=fairseq
-  
-If has any network problems，you can clone it and install by zip file
+   
+If has any network problems，you can clone it and install by zip file  
 1.git clone https://github.com/facebookresearch/fairseq.git  
 2.cd fairseq  
 3.git checkout a29952ce6d313a4daf3e90647f8bf84cc6d4df6d  
