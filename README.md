@@ -14,8 +14,9 @@ installing anaconda first, then:
 # Dependency Introduction
 
 1. gcc >=7.1 (C++17) 
-2. python >= 3.9
-3. PyTorch >= 1.10.0
+2. ssl >= 1.1
+3. python >= 3.9
+4. PyTorch >= 1.10.0
 
 OS support: Linux, Mac OSX
 
@@ -44,7 +45,8 @@ Using pip:
 1. You need to check and install the GPU driver.
 2. Checking the CUDA version by typing 'nvidia-smi' on the command line 
 3. Installing pytorch-cuda through the website link:https://pytorch.org
-4. pip install paddlepaddle-gpu==2.4.1 (optional, for nvidia-gpu cuda environment)
+4. pip install paddlepaddle-gpu==2.5.0
+5. install cuda+cudnn and config the paths. (must > 11.4. refer to:https://blog.csdn.net/qq_43183860/article/details/127657306)
 
 # Pretrain files  
 model: https://dl.fbaipublicfiles.com/mms/lid/mms1b_l126.pt

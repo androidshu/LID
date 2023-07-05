@@ -1,6 +1,6 @@
 pytest-runner==6.0.0
 paddlespeech
-paddlepaddle==2.4.1
+paddlepaddle==2.5.0
 scipy
 tqdm
 Pillow
